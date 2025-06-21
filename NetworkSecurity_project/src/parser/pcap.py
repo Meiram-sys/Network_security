@@ -3,6 +3,7 @@
 Network Packet Capture Tool - Timeout via Python
 
 This script captures network packets and saves them to a PCAP file.
+PCAP
 """
 
 import argparse
@@ -12,38 +13,43 @@ import time
 from datetime import datetime
 from threading import Timer
 
-def capture_packets(interface=None, output_file=None, packet_count=None, 
-                    timeout=None, bpf_filter=None, verbose=True):
+def capture_packets(interface=None, output_file=None, packet_count=None,
+                   timeout=None, bpf_filter=None, verbose=True):
     """
     Capture network packets using tcpdump with Python-based timeout.
     """
     if output_file is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = f"/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_security/NetworkSecurity/src/parser/network_data/packet.pcap"
-
+        output_file = f"/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/network_data/packet.pcap"
+    
+    # Use loopback interface for localhost traffic
+    if interface is None:
+        interface = "lo0"  # macOS loopback interface
+    
     if verbose:
         print(f"Starting packet capture with tcpdump:")
-        print(f"  Interface: {interface if interface else 'default'}")
-        print(f"  Output file: {output_file}")
+        print(f" Interface: {interface}")
+        print(f" Output file: {output_file}")
         if packet_count:
-            print(f"  Packet limit: {packet_count}")
+            print(f" Packet limit: {packet_count}")
         if timeout:
-            print(f"  Time limit: {timeout} seconds")
+            print(f" Time limit: {timeout} seconds")
         if bpf_filter:
-            print(f"  Filter: {bpf_filter}")
-        print("\nPress Ctrl+C to stop capturing manually...")
-        print("-" * 50)
-
-    cmd = ["tcpdump", "-w", output_file]
-
-    if interface:
-        cmd.extend(["-i", interface])
+            print(f" Filter: {bpf_filter}")
+    
+    cmd = ["tcpdump", "-w", output_file, "-i", interface]
+    
     if packet_count:
         cmd.extend(["-c", str(packet_count)])
+    
+    # Add filter to capture TCP traffic to common ports
+    if not bpf_filter:
+        bpf_filter = "tcp and (port 80 or port 443 or port 22 or port 53 or port 123 or port 8080)"
+    
     if bpf_filter:
         cmd.append(bpf_filter)
-
-    cmd.append("-n")  # Do not convert addresses
+    
+    cmd.extend(["-n", "-s", "0"]) 
 
     if verbose:
         print(f"Running: {' '.join(cmd)}")

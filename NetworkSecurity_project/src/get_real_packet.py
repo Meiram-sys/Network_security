@@ -1,58 +1,64 @@
 #!/usr/bin/env python3
 """
-Network Data Capture and Parsing Script
-
-This script sequentially runs two Python scripts:
-1. pcap.py - Captures network data in pcap format (requires sudo)
-2. packet_parser.py - Parses the captured data into ML format
+Enhanced Network Data Capture and Parsing Script with DDoS
 """
-
 import subprocess
 import os
 import sys
 import time
+import threading
 
-def run_command(command, description):
-    """Run a shell command and handle potential errors."""
-    print(f"Starting: {description}")
-    try:
-        process = subprocess.run(command, check=True, shell=True)
-        print(f"Successfully completed: {description}")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"Error during {description}: {e}")
-        return False
-    except Exception as e:
-        print(f"Unexpected error during {description}: {e}")
-        return False
+def run_ddos_attack(duration=60):
+    """Run DDoS attack in background"""
+    ddos_script = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/ddos_simulator.py"
+    if os.path.exists(ddos_script):
+        ddos_command = f"python3 {ddos_script} {duration}"
+        print("Starting DDoS simulation...")
+        subprocess.run(ddos_command, shell=True)
+    else:
+        print(f"DDoS script not found: {ddos_script}")
 
 def main():
-    # Define paths to the scripts
-    pcap_script = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_security/NetworkSecurity/src/parser/pcap.py"
-    parser_script = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_security/NetworkSecurity/src/parser/packet_parser.py"
+    pcap_script = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/pcap.py"
+    parser_script = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/packet_parser.py"
     
-    # Verify that both scripts exist
-    if not os.path.exists(pcap_script):
-        print(f"Error: {pcap_script} does not exist.")
+    # Verify scripts exist
+    for script in [pcap_script, parser_script]:
+        if not os.path.exists(script):
+            print(f"Error: {script} does not exist.")
+            return False
+    
+    # Start DDoS attack in background
+    ddos_thread = threading.Thread(target=run_ddos_attack, args=(90,))
+    ddos_thread.daemon = True
+    ddos_thread.start()
+    
+    # Wait for DDoS to start
+    print("Waiting for DDoS to start...")
+    time.sleep(3)
+    
+    # Capture packets from both interfaces using tcpdump directly
+    output_file = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/network_data/packet.pcap"
+    
+    capture_command = f"sudo tcpdump -i any -w {output_file} -G 60 -W 1"
+    print("Starting packet capture on both lo0 and en0...")
+    
+    try:
+        subprocess.run(capture_command, shell=True, check=True)
+        print("Packet capture completed successfully")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during packet capture: {e}")
         return False
     
-    if not os.path.exists(parser_script):
-        print(f"Error: {parser_script} does not exist.")
-        return False
-    
-    # Step 1: Run pcap.py with sudo
-    capture_command = f"sudo python3 {pcap_script} -t 120"
-    if not run_command(capture_command, "Network data capture"):
-        print("Failed to capture network data. Stopping execution.")
-        return False
-    
-    # Short delay to ensure the first process completes fully
-    time.sleep(1)
-    
-    # Step 2: Run packet_parser.py
+    # Parse captured packets
+    time.sleep(2)
     parse_command = f"python3 {parser_script}"
-    if not run_command(parse_command, "Data parsing"):
-        print("Failed to parse network data.")
+    print("Starting packet parsing...")
+    try:
+        subprocess.run(parse_command, shell=True, check=True)
+        print("Packet parsing completed successfully")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during packet parsing: {e}")
         return False
     
     print("All operations completed successfully.")
