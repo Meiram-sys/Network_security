@@ -30,7 +30,7 @@ pip install scapy pandas numpy lightgbm joblib tqdm
 | Capture & parse | `sudo python get_real_packet.py`           | Captures 60s of traffic, simulates DDoS, extracts features to CSV  |
 | Run inference   | `python inference.py`                      | Loads model, classifies flows, saves result and filtered anomalies |
 | Inspect results | `cat model_result/problematic_packets.csv` | View flagged packets with source/destination IPs                   |
-
+   
 
 📊 Training the Model
 Use model_training.ipynb to retrain the classifier with CICIDS-2017 flows (BENIGN + DDOS only). The same feature structure is used for training and inference.
