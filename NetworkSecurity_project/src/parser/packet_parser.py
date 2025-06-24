@@ -1,6 +1,3 @@
-"""
-OPTIMIZED COMPLETE PACKET PARSER WITH SOURCE AND DESTINATION IP
-"""
 
 from scapy.all import rdpcap, IP, TCP, UDP
 import pandas as pd
@@ -8,6 +5,7 @@ import numpy as np
 import time
 import os
 from collections import defaultdict
+import os
 
 class OptimizedFlowExtractor:
     """
@@ -411,14 +409,31 @@ def analyze_pcap_optimized(input_file, output_file=None, timeout=120):
         print(f"Error: {e}")
         return pd.DataFrame()
 
+def find_project_root():
+    """Find NetworkSecurity_project directory"""
+    current_dir = os.path.abspath(os.path.dirname(__file__))
+    
+    while current_dir != os.path.dirname(current_dir):
+        if os.path.basename(current_dir) == "NetworkSecurity_project":
+            return current_dir
+        current_dir = os.path.dirname(current_dir)
+    
+    return None
+
 
 if __name__ == "__main__":
-    pcap_file = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/network_data/packet.pcap"
-    output_file = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/network_data/real_packet_features.csv"
+    project_root = find_project_root()
+    
+    if project_root:
+        pcap_file = os.path.join(project_root, "src", "parser", "network_data", "packet.pcap")
+        output_file = os.path.join(project_root, "src", "parser", "network_data", "real_packet_features.csv")
+    else:
+        print("Error: Could not find NetworkSecurity_project directory")
+        exit(1)
     
     df = analyze_pcap_optimized(pcap_file, output_file)
     
     if not df.empty:
         print(f"\nFinal result: {df.shape}")
-        print("All 80 features preserved !")
+        print("All 80 features preserved!")
         print(f"Columns: {list(df.columns)}")
