@@ -1,55 +1,64 @@
-## Network_security AI-Based Intrusion Detection Systems
-A real-time network security system that captures packets, processes them through ML models, and implements actions based on detection results.
-## Overview
-This project implements an AI-based intrusion detection system that:
+# NetworkSecurity_project  
+**Real-time Network Packet Classification & DDoS Detection**
 
-Captures network packets in real-time
-Parses captured data into ML-compatible format
-Processes and cleans the data
-Applies machine learning models for intrusion detection
-Implements real-time actions based on detection results
+This repository contains a complete, end-to-end pipeline that **captures live traffic, simulates DDoS attacks, extracts 80 flow-level features, and classifies each flow as _BENIGN_ or _DDOS_ with a pre-trained LightGBM model**.
 
-# Workflow
-1. Data Capture
-Capture network traffic in PCAP format:
-bashsudo python3 pcap.py
-2. Data Parsing
-Parse captured PCAP data into machine learning compatible format:
-bashpython3 packet_parser.py
-3. Streamlined Workflow
-For a single flow operation (capture and parse):
-bashpython3 get_real_packet.py
-This script first runs pcap.py and then packet_parser.py automatically.
-4. Feature Extraction
-Combine separate CSV files into a single dataset for model training:
-bashpython3 get_feature.py
-The output is used in model_training.ipynb.
+## ✨ Key Features
+- Live packet capture using `tcpdump` (interface-agnostic)
+- Aggressive SYN-flood generator for local testing on port `2703`
+- High-performance flow parser that preserves all 78 CICIDS-2017 features plus Source/Destination IP (80 total)
+- LightGBM inference with persisted `joblib` artefacts and human-readable CSV results
+- Modular layout—easy to swap models or plug in new data sources
 
-# Project Components
-## Jupyter Notebooks
-checking_parser.ipynb: Inspect and verify PCAP and parsed data
-data_cleaning.ipynb: Data preprocessing and cleaning operations
-model_training.ipynb: Train and evaluate ML models, store artifacts (label encoder and model)
+## 🗂️ Project Layout
+NetworkSecurity_project/
+├── artifacts/ # Saved model & label encoder (.joblib)
+├── get_real_packet.py # Orchestrates capture → parse → (optional) attack
+├── inference.py # Runs the trained classifier on fresh features
+├── model_training.ipynb # Notebook used to (re)train the LightGBM model
+├── Project_Presentation.pptx # High-level slides
+└── src/
+└── parser/
+├── ddos_simulator.py # SYN-flood generator
+├── packet_parser.py # 80-feature extractor
+└── network_data/ # Captured .pcap and derived .csv files
 
-## Python Scripts
-pcap.py: Network packet capture utility
-packet_parser.py: PCAP file parsing
-get_real_packet.py: Automates the capture-parse workflow
-get_feature.py: Feature engineering and dataset preparation
-inference.py: Applies trained model to processed data
 
-## Running Inference
-To perform inference on new data:
-bashpython3 inference.py
-This script:
-Takes the output from get_feature.py (CSV format)
-Applies the trained ML model
-Makes predictions
-Stores results in model_result/result.csv
+## ⚙️ Installation
 
-## Terminal Execution
-Run the project from terminal:
-bash/usr/bin/python3
-## Output
-Detection results are stored in CSV format at:
-model_result/result.csv
+**Prerequisites:** Python 3.9+, `tcpdump` (needs sudo), and libpcap on the host.
+
+```bash
+git clone <repo>
+cd NetworkSecurity_project
+python -m venv .venv && source .venv/bin/activate
+pip install scapy pandas numpy lightgbm joblib tqdm
+
+| Step            | Command                                    | Description                                                        |
+| --------------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| Capture & parse | `sudo python get_real_packet.py`           | Captures 60s of traffic, simulates DDoS, extracts features to CSV  |
+| Run inference   | `python inference.py`                      | Loads model, classifies flows, saves result and filtered anomalies |
+| Inspect results | `cat model_result/problematic_packets.csv` | View flagged packets with source/destination IPs                   |
+
+
+📊 Training the Model
+Use model_training.ipynb to retrain the classifier with CICIDS-2017 flows (BENIGN + DDOS only). The same feature structure is used for training and inference.
+
+🔍 How It Works
+ddos_simulator.py sends TCP SYN floods to port 2703
+get_real_packet.py captures packets via tcpdump
+packet_parser.py processes packets into 80-feature flows
+inference.py loads LightGBM model and classifies flows
+
+| Setting            | Location                     | Description                     |
+| ------------------ | ---------------------------- | ------------------------------- |
+| Capture duration   | get\_real\_packet.py (`-G`)  | How long to capture packets     |
+| DDoS rate/duration | ddos\_simulator.py arguments | Adjust SYN flood behavior       |
+| Model path         | inference.py (`artifacts/`)  | Load  `.joblib` model           |
+
+Permission denied by tcpdump: Run with sudo or update capabilities.
+Using own PCAP: Drop PCAP in src/parser/network_data/ and run:
+python src/parser/packet_parser.py
+python inference.py
+
+
