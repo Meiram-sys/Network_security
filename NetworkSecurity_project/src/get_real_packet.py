@@ -8,9 +8,10 @@ import sys
 import time
 import threading
 
-def run_ddos_attack(duration=60):
+def run_ddos_attack(project_root, duration=60):
     """Run DDoS attack in background"""
-    ddos_script = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/ddos_simulator.py"
+    ddos_script = os.path.join(project_root, "src", "parser", "ddos_simulator.py")
+    
     if os.path.exists(ddos_script):
         ddos_command = f"python3 {ddos_script} {duration}"
         print("Starting DDoS simulation...")
@@ -18,18 +19,32 @@ def run_ddos_attack(duration=60):
     else:
         print(f"DDoS script not found: {ddos_script}")
 
-def main():
-    pcap_script = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/pcap.py"
-    parser_script = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/packet_parser.py"
+def find_project_root():
+    """Find NetworkSecurity_project directory"""
+    current_dir = os.path.abspath(os.path.dirname(__file__))
     
-    # Verify scripts exist
-    for script in [pcap_script, parser_script]:
-        if not os.path.exists(script):
-            print(f"Error: {script} does not exist.")
-            return False
+    while current_dir != os.path.dirname(current_dir):
+        if os.path.basename(current_dir) == "NetworkSecurity_project":
+            return current_dir
+        current_dir = os.path.dirname(current_dir)
+    
+    return None
+
+def main():
+    project_root = find_project_root()
+    
+    if not project_root:
+        print("Error: Could not find NetworkSecurity_project directory")
+        return False
+    
+    parser_script = os.path.join(project_root, "src", "parser", "packet_parser.py")
+    output_file = os.path.join(project_root, "src", "parser", "network_data", "packet.pcap")
+    
+    # Create network_data directory if it doesn't exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
     
     # Start DDoS attack in background
-    ddos_thread = threading.Thread(target=run_ddos_attack, args=(90,))
+    ddos_thread = threading.Thread(target=run_ddos_attack, args=(project_root, 90))
     ddos_thread.daemon = True
     ddos_thread.start()
     
@@ -38,11 +53,8 @@ def main():
     time.sleep(3)
     
     # Capture packets from both interfaces using tcpdump directly
-    output_file = "/Users/meiramzarypkanov/Desktop/University/4_Network_Security/Network_project/Network_security/NetworkSecurity_project/src/parser/network_data/packet.pcap"
-    
     capture_command = f"sudo tcpdump -i any -w {output_file} -G 60 -W 1"
     print("Starting packet capture on both lo0 and en0...")
-    
     try:
         subprocess.run(capture_command, shell=True, check=True)
         print("Packet capture completed successfully")
