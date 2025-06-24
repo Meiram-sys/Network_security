@@ -11,17 +11,8 @@ This repository contains a complete, end-to-end pipeline that **captures live tr
 - Modular layout—easy to swap models or plug in new data sources
 
 ## 🗂️ Project Layout
-NetworkSecurity_project/
-├── artifacts/ # Saved model & label encoder (.joblib)
-├── get_real_packet.py # Orchestrates capture → parse → (optional) attack
-├── inference.py # Runs the trained classifier on fresh features
-├── model_training.ipynb # Notebook used to (re)train the LightGBM model
-├── Project_Presentation.pptx # High-level slides
-└── src/
-└── parser/
-├── ddos_simulator.py # SYN-flood generator
-├── packet_parser.py # 80-feature extractor
-└── network_data/ # Captured .pcap and derived .csv files
+<img width="505" alt="image" src="https://github.com/user-attachments/assets/666bc711-0360-4b85-9aa4-2c18e385c814" />
+
 
 
 ## ⚙️ Installation
