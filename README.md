@@ -52,4 +52,9 @@ Using own PCAP: Drop PCAP in src/parser/network_data/ and run:
 python src/parser/packet_parser.py
 python inference.py
 
+## Training the Model
+1. Create a directory named `data/MachieneLearningCVE` in your project root.
+2. Download the CSV files from [this Google Drive folder](https://drive.google.com/drive/folders/1CsFCWMEt4SvHE6MVDMkEJjFdQzhL01a-?usp=sharing).
+3. Place the downloaded CSV files into the `data/MachieneLearningCVE` directory.
+4. Proceed with training your model using the CSV files in this directory.
 
